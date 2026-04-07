@@ -19,9 +19,12 @@ ApplicationWindow {
             model: f
             delegate: Rectangle {
                 width: ListView.view.width
-                height: 44
+                height: 20
                 color: (index % 2 === 0) ? "#f6f6f6" : "#ffffff"
                 border.color: "#dddddd"
+                Text {
+                    text: name
+                }
             }
         }
     }

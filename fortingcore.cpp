@@ -96,24 +96,17 @@ namespace Forting
         if (!index.isValid()) return {};
         int row = index.row();
         if (row < 0 || row >= static_cast<int>(this->FileIndexList.size())) return {};
-        int idxoffile = FileIndexList[row];
-        FileEntry *f = &FileList[idxoffile];
-        if (!f) return {};
-        switch (role) {
-        case SortKey::name:
-            return f->name;
-            break;
-        default:
-            return {};
-            break;
-        }
+        const int idxoffile = FileIndexList[row];
+        const FileEntry *fileptr = &FileList[idxoffile];
+        if (!fileptr) return {};
+        return fileptr->name;
     }
 
     QHash<int, QByteArray> File::roleNames() const
     {
-        return
-            { SortKey::name, "name" }
-        ;
+        QHash<int, QByteArray> roles;
+        roles.insert(static_cast<int>(SortKey::name), "name");
+        return roles;
     }
 
     Sort::Sort(File& f) {
