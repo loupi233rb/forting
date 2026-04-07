@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     Forting::File f;
+    f.init();
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("f",&f);

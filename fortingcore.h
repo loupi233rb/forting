@@ -9,27 +9,26 @@
 #include <QDateTime>
 #include <QString>
 #include <QVector>
+#include <QAbstractListModel>
 
 namespace Forting
 {
-    class File : public QObject
+    class File : public QAbstractListModel
     {
         Q_OBJECT
-        Q_PROPERTY(double value READ value WRITE setValue NOTIFY valueChanged)
 
     private:
         double m_value;
-        QString root;
-        void Walk();
+        QString root;  //working dir
         bool FileListWriteToTxt();
         QVector<FileEntry> FileList;
         vi FileIndexList;
 
-        void init();
-        void sort_by(SortKey type, SortKey dir = SortKey::Asc);
     public:
         explicit File(QObject *parent = nullptr);
+        void init();
         int fileListLen() { return FileList.size(); }
+        /*
         double value() const {return m_value;}
         void setValue(double v)
         {
@@ -37,10 +36,20 @@ namespace Forting
             m_value = v;
             emit valueChanged();
         }
+        */
+
+        int rowCount(const QModelIndex &parent=QModelIndex()) const override;
+        QVariant data(const QModelIndex &index, int role) const override;
+        QHash<int, QByteArray> roleNames() const override;
+
+        /*
         Q_INVOKABLE void add1() {setValue(m_value+1);}
         Q_INVOKABLE void sub1() {setValue(m_value-1);}
         Q_INVOKABLE void mul10() {setValue(m_value*10);}
         Q_INVOKABLE void div10() {setValue(m_value/10);}
+        */
+        Q_INVOKABLE void Walk();
+        Q_INVOKABLE void sort_by(SortKey type, SortKey dir = SortKey::Asc);
     signals:
         void valueChanged();
     };

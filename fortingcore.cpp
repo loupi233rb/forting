@@ -69,6 +69,7 @@ namespace Forting
     }
 
     File::File(QObject *parent) {
+        m_value = 0.;
         this->root = nullptr;
     }
 
@@ -82,6 +83,37 @@ namespace Forting
         this->sort_by(SortKey::size, SortKey::Desc);
         this->FileListWriteToTxt();
     #endif
+    }
+
+    int File::rowCount(const QModelIndex &parent) const
+    {
+        if (parent.isValid()) return 0;
+        return static_cast<int>(this->FileIndexList.size());
+    }
+
+    QVariant File::data(const QModelIndex &index, int role) const
+    {
+        if (!index.isValid()) return {};
+        int row = index.row();
+        if (row < 0 || row >= static_cast<int>(this->FileIndexList.size())) return {};
+        int idxoffile = FileIndexList[row];
+        FileEntry *f = &FileList[idxoffile];
+        if (!f) return {};
+        switch (role) {
+        case SortKey::name:
+            return f->name;
+            break;
+        default:
+            return {};
+            break;
+        }
+    }
+
+    QHash<int, QByteArray> File::roleNames() const
+    {
+        return
+            { SortKey::name, "name" }
+        ;
     }
 
     Sort::Sort(File& f) {

@@ -7,20 +7,22 @@ ApplicationWindow {
     width: 480
     height: 320
     title: "基础 QML 示例"
-    ColumnLayout {
-        anchors.centerIn: parent
-        spacing: 12
-        Text {
-            font.pixelSize: 28
-            text: "value= "+ f.value
-        }
-        RowLayout {
-            spacing: 8
 
-            Button {text: "+1";onClicked: f.add1()}
-            Button {text: "-1";onClicked: f.sub1()}
-            Button {text: "*10";onClicked: f.mul10()}
-            Button {text: "/10";onClicked: f.div10()}
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 8
+
+        ListView {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
+            model: f
+            delegate: Rectangle {
+                width: ListView.view.width
+                height: 44
+                color: (index % 2 === 0) ? "#f6f6f6" : "#ffffff"
+                border.color: "#dddddd"
+            }
         }
     }
 }

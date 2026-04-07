@@ -9,7 +9,7 @@
 
 namespace Forting
 {
-enum class SortKey { name, size, last_modified, created, suffix, Asc, Desc };
+enum class SortKey { name=0, size, last_modified, created, suffix, Asc, Desc };
 enum class decision {
     Delete=1, Tag=2, Rename=4
 };
