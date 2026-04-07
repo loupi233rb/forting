@@ -1,5 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 
 #include "fortingcore.h"
 #include "airuleparser.h"
@@ -7,8 +8,11 @@
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+    Forting::File f;
 
     QQmlApplicationEngine engine;
+    engine.rootContext()->setContextProperty("f",&f);
+
     QObject::connect(
         &engine,
 

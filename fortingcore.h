@@ -15,8 +15,10 @@ namespace Forting
     class File : public QObject
     {
         Q_OBJECT
+        Q_PROPERTY(double value READ value WRITE setValue NOTIFY valueChanged)
 
     private:
+        double m_value;
         QString root;
         void Walk();
         bool FileListWriteToTxt();
@@ -28,6 +30,19 @@ namespace Forting
     public:
         explicit File(QObject *parent = nullptr);
         int fileListLen() { return FileList.size(); }
+        double value() const {return m_value;}
+        void setValue(double v)
+        {
+            if(qFuzzyCompare(m_value,v)) return;
+            m_value = v;
+            emit valueChanged();
+        }
+        Q_INVOKABLE void add1() {setValue(m_value+1);}
+        Q_INVOKABLE void sub1() {setValue(m_value-1);}
+        Q_INVOKABLE void mul10() {setValue(m_value*10);}
+        Q_INVOKABLE void div10() {setValue(m_value/10);}
+    signals:
+        void valueChanged();
     };
 
     using GTNptr = std::unique_ptr<GroupTreeNode>;
