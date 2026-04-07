@@ -5,7 +5,7 @@
 #include "airuleparser.h"
 
 #include <memory>
-#include <QDir.h>
+#include <QDir>
 #include <QDateTime>
 #include <QString>
 #include <QVector>

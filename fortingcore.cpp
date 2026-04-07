@@ -68,7 +68,7 @@ namespace Forting
                   {return (dir==SortKey::Asc)?less(a,b):less(b,a);});
     }
 
-    File::File() {
+    File::File(QObject *parent) {
         this->root = nullptr;
     }
 
