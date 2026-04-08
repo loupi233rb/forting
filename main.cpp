@@ -1,6 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QtQml>
 
 #include "fortingcore.h"
 #include "airuleparser.h"
@@ -13,6 +14,12 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("f",&f);
+
+    qmlRegisterUncreatableMetaObject(
+        Forting::staticMetaObject,
+        "FortingStruct", 1, 0,
+        "Forting",
+        "Enum only");
 
     QObject::connect(
         &engine,

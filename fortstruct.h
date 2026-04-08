@@ -9,10 +9,14 @@
 
 namespace Forting
 {
+Q_NAMESPACE
+
 enum class SortKey { name=Qt::UserRole+1, size, last_modified, created, suffix, Asc, Desc };
 enum class decision {
     Delete=1, Tag=2, Rename=4
 };
+
+Q_ENUM_NS(SortKey)
 
 struct action {
     int decision = 0;     // bit: tag=4 rename=2 delete=1

@@ -38,7 +38,7 @@ namespace Forting
         }
         */
 
-        int rowCount(const QModelIndex &parent=QModelIndex()) const override;
+        int rowCount(const QModelIndex &parent = QModelIndex()) const override;
         QVariant data(const QModelIndex &index, int role) const override;
         QHash<int, QByteArray> roleNames() const override;
 
@@ -48,6 +48,7 @@ namespace Forting
         Q_INVOKABLE void mul10() {setValue(m_value*10);}
         Q_INVOKABLE void div10() {setValue(m_value/10);}
         */
+        // 每次改变都要在开始和末尾加上beginResetModel()和endResetModel()，以通知视图更新
         Q_INVOKABLE void Walk();
         Q_INVOKABLE void sort_by(SortKey type, SortKey dir = SortKey::Asc);
     signals:

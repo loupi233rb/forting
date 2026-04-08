@@ -9,6 +9,7 @@
 namespace Forting
 {
     void File::Walk() {
+        beginResetModel();
         QDirIterator it(this->root,
                         QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden | QDir::System);
         while(it.hasNext()) {
@@ -25,6 +26,7 @@ namespace Forting
             fe.modified = fi.lastModified();
             FileList.push_back(fe);
         }
+        endResetModel();
     }
 
     bool File::FileListWriteToTxt(){
@@ -45,6 +47,7 @@ namespace Forting
     }
 
     void File::sort_by(SortKey type, SortKey dir) {
+        beginResetModel();
         auto less = [&](int a, int b) {
             const FileEntry& A = this->FileList[a];
             const FileEntry& B = this->FileList[b];
@@ -66,6 +69,7 @@ namespace Forting
         std::sort(FileIndexList.begin(),FileIndexList.end()
                   ,[&](int a,int b)
                   {return (dir==SortKey::Asc)?less(a,b):less(b,a);});
+        endResetModel();
     }
 
     File::File(QObject *parent) {
