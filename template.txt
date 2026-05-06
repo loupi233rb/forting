@@ -1,0 +1,5 @@
+if size > 100 :tag("small");
+else :delete;
+end
+
+tag(size);

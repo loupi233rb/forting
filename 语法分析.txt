@@ -1,0 +1,65 @@
+使用c++编写一个语法解析类，主要内容阐述如下，
+目标是根据程序外的自定义语法的代码，根据文件信息，打上标签，同时记录代码中删除和重命名操作。
+目标代码介绍如下：
+自定义代码主要由ifelse分支和when分支以及单条操作为单元，每一个单元只会产生一个标签，多个单元根据出现顺序决定标签层数。
+ifelse分支语法结构为if-elif-else，每个关键字后面有一个布尔表达式，随后是一个:，紧接着是操作代码，操作代码末尾是;，单元末尾是end
+when结构类似于switch，when关键字后是文件属性，然后是:，接着是每一个分支并列，分支内部首先是一个判断表达式，然后:，最后也是操作代码，操作代码结尾是;，单元结尾是end
+单条操作tag命令也可作为单元。
+ifelse中的布尔表达式的最小组成为，属性+判断符号+值，其结果为true或者false，多个这样的式子可以使用&& || () ！的符号实现运算，最终得出一个值，用于判断是否进入该分支的操作。
+when结构的判断表达式与ifelse类似，但去除属性，使用when后面的属性代替，也就是只有判断符号+值。
+属性有name,suffix,size，以及date 和time，其中date可以有year month day，time可以有hour minute second，使用方法为time.hour这样的，所有值都是数字，没有小数
+如直接写date或者time，格式应为yy-mm-dd，hh-mm-ss，没有前导0，如time>=11-30-30为时间超过11时30分30秒，
+name值为字符串，应使用双引号包裹，suffix值可直接写不加点的名称，
+size格式为数字加单位，单位有b,kb,mb,gb，进制1024，最终比较时统一转换为b比较，size在判断布尔表达式中可带单位，如size>=16.6mb，不做大小写要求，可以为小数，size单位换算采取计算机中的1024b=1kb.
+若比较符号是=，多个值可以使用|连接，表示任取其一满足即为true。
+比较符号有=,!=,>,<,>=,<=,
+操作代码只有三种，tag，rename，和delete，数字分别为4，2，1，使用一个二进制数来囊括所有操作，操作关键字后为括号()，括号内为一个字符串，delete后什么也没有。
+字符串可以进行基本的拼接操作，如name+" "+date.month，即为在文件名后加上空格和文件时间的月份数字，非属性内容出现在字符串内要加上双引号，双引号内部用\来表示保留符号如><"等。
+字符串中的size输出单位为智能判断，便于阅读。
+
+类创建后，使用一个输入为代码文件路径的函数读取代码，然后解析
+目标代码解析完成后，将其按照合适的数据结构组织起来，方便之后对所有文件进行处理时不用反复解析目标代码。
+处理文件时，文件信息结构体如下
+struct FileEntry {
+        string name;
+        string suffix;
+        int64_t size;
+        tm lw_time;
+    };
+解析类应当有一个公共成员函数，输入一个文件信息结构体vector的常引用，然后输出一个vector，包含所有如下的结构体
+struct action {
+        int decision = 0;     // bit: tag=4 rename=2 delete=1
+        string tagValue;     // tag(...) 结果
+        string renameValue;  // rename(...) 结果
+        bool deleteFlag = false;
+    };
+所构成的vector，vector中元素的个数和结构体内FileEntry的数目一致，外层的vector所包含vector数是单元数。
+目标代码分析时，要能够判断语法错误，如解析目标代码失败则终止程序，并返回错误的行数以及列数和错误信息
+
+给出类的实现完整全部代码，要求使用标准库，c++23
+
+下面是实例的自定义代码，
+if suffix=pdf|docs|xls|ppt|md && (size!=0 || name!="d"):
+	tag("document");
+   elif suffix=jpg|png|bmp|raw|gif|jepg || name="pic":
+	tag("picture");
+ elif suffix=mp3|flac|wav :
+	tag("audio");
+elif suffix=mp4|mepg:
+	tag("video") ;
+elif name="a"|"b"|"c":
+tag("abc");
+else:
+	tag("other");
+end
+
+tag(time);
+when date.year:
+=2025:delete;
+=2026:
+    tag(date.month);
+end
+
+if name="report":
+tag("document"),rename(name+size);
+end

@@ -1,0 +1,12 @@
+{
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "clangd.arguments": [
+        "--query-driver=C:/msys64/mingw64/bin/g++.exe,C:/msys64/mingw64/bin/g*",
+        "--completion-style=detailed",
+        "--log=verbose"
+    ],
+    "clangd.fallbackFlags": [
+    "-xc++",
+    "-std=c++23",
+]
+}
