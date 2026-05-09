@@ -40,10 +40,9 @@ namespace Forting
         if (!outfile.is_open()) {
             return false;
         }
-        for(auto &it: FileIndexList) {
-            auto item = FileList[it];
-            outfile << item.name;
-            outfile << " " << item.size << "\n";
+        for(auto &fe : this->FileList) {
+            outfile << fe.name;
+            outfile << " " << fe.size << "\n";
         }
         outfile.close();
         return true;
@@ -55,42 +54,13 @@ namespace Forting
 
     void File::init() {
         this->FileList.clear();
-        this->FileIndexList.clear();
         this->root = fs::current_path();
         #ifdef DEBUG
         this->Walk(true);
         #else
         this->Walk(false);
         #endif
-        for(int i=0;i<this->FileList.size();i++) FileIndexList.push_back(i);
         this->FileListWriteToTxt();
     }
-
-    // Sort::Sort(File& f) {
-    //     this->file = &f;
-    // }
-
-    /*
-    GTNptr Sort::buildGroupTree() {
-        GTNptr rootptr = std::make_unique<GroupTreeNode>();
-        rootptr->tag = "__root__";
-        int len = this->file->fileListLen();
-        for(int i=0;i<len;++i) {
-            auto cur = rootptr.get();
-            for(auto &t: Tag) {
-                const QString& k = t.AllFileClassName[t.FileClassNameIndex[i]];
-                if(!cur->children.contains(k)) {
-                    auto child = std::make_unique<GroupTreeNode>();
-                    child->tag = k;
-                    cur->children[k] = std::move(child);
-                }
-                cur = cur->children[k].get();
-                cur->indices.push_back(i);
-            }
-            cur->indices.push_back(i);
-        }
-        return rootptr;
-    }
-        */
 
 }
