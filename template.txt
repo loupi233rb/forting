@@ -4,3 +4,5 @@ end
 when suffix:
 !=txt:delete;
 end
+tag("size");
+rename(date);

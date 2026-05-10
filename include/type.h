@@ -19,9 +19,8 @@ namespace Forting
     enum class decision { Delete=1, Tag=2, Rename=4 };
 
     struct action {
-        int decision = 0;     // bit: tag=4 rename=2 delete=1
-        string tagValue;     // tag(...) 结果
-        string renameValue;  // rename(...) 结果
+        fs::path paths;
+        string renameValue;
         bool deleteFlag = false;
     };
 
@@ -34,21 +33,14 @@ namespace Forting
 
     using FortingLayer = vector<action>;  // 单层分类结果索引和FileList对应
 
-    // struct GroupTreeNode {
-    //     Index layerIndex;  //-1表示根节点
-    //     string tag;
-    //     vi indices;
-    //     std::map<string,std::unique_ptr<GroupTreeNode>> children;
-    // };  //类别树节点
 
     inline void printActions(const vector<action>& acts, ostream& os = cout) {
         os << "Actions:\n";
         for (size_t i = 0; i < acts.size(); ++i) {
-            const auto& a = acts[i];
-            os << "Unit[" << i << "] "
-            << "decision=" << a.decision
-            << " tag=\"" << a.tagValue << "\""
-            << " rename=\"" << a.renameValue << "\""
+            const action& a = acts[i];
+            os << "file " << i << ": "
+            << "paths=" << a.paths.string()
+            << " rename=" << (a.renameValue.empty() ? "null" : a.renameValue)
             << " delete=" << (a.deleteFlag ? "true" : "false")
             << "\n";
         }

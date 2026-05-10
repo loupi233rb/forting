@@ -8,8 +8,8 @@
 namespace Forting
 {
     void File::Walk(bool recursive) {
-        if(!fs::exists(this->root) || !fs::is_directory(this->root)) {
-            cerr << "Invalid root path: " << this->root << endl;
+        if(!fs::exists(this->current_path) || !fs::is_directory(this->current_path)) {
+            cerr << "Invalid current_path path: " << this->current_path << endl;
             return;
         }
         auto process_entry = [](const fs::directory_entry& entry, vector<FileEntry>& fileList) {
@@ -21,14 +21,14 @@ namespace Forting
             fe.suffix = entry.path().extension().string();
             fileList.push_back(std::move(fe));
         };
-        fs::recursive_directory_iterator d_it = fs::recursive_directory_iterator(this->root, fs::directory_options::skip_permission_denied);
+        fs::recursive_directory_iterator d_it = fs::recursive_directory_iterator(this->current_path, fs::directory_options::skip_permission_denied);
         if(recursive) {
-            for(auto &entry : fs::recursive_directory_iterator(this->root, fs::directory_options::skip_permission_denied)) {
+            for(auto &entry : fs::recursive_directory_iterator(this->current_path, fs::directory_options::skip_permission_denied)) {
                 process_entry(entry, this->FileList);
             }
         }
         else {
-            for(auto &entry : fs::directory_iterator(this->root, fs::directory_options::skip_permission_denied)) {
+            for(auto &entry : fs::directory_iterator(this->current_path, fs::directory_options::skip_permission_denied)) {
                 process_entry(entry, this->FileList);
             }
         }
@@ -49,18 +49,27 @@ namespace Forting
     }
 
     File::File() {
-        this->root = fs::current_path();
+        this->current_path = fs::current_path();
     }
 
     void File::init() {
         this->FileList.clear();
-        this->root = fs::current_path();
+        this->current_path = fs::current_path();
         #ifdef DEBUG
         this->Walk(true);
+        this->FileListWriteToTxt();
         #else
         this->Walk(false);
         #endif
-        this->FileListWriteToTxt();
+    }
+
+    void File::run(const std::vector<action>& acts, bool force) {
+        while(fs::exists(this->delete_path)) {
+            this->delete_path.concat("_");
+        }
+        for(const auto& act: acts) {
+
+        }
     }
 
 }

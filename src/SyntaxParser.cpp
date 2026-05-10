@@ -61,6 +61,18 @@ struct Token {
     int line = 1, col = 1;
 };
 
+static bool is_string_valid(const std::string& s) {
+    #ifdef _WIN32
+    for(char c : s) {
+        if (c == '\\' || c == '/' || c == ':' || c == '*' || c == '?' || c == '"' || c == '<' || c == '>' || c == '|')
+            return false;
+    }
+    #elifdef __linux__
+    return s.find('/') == std::string::npos && !s.empty();
+    #endif
+    return true;
+}
+
 class Lexer {
 public:
     explicit Lexer(std::string src) : s_(std::move(src)) {}
@@ -557,17 +569,17 @@ struct ActStmt {
 
 static void applyActs(const std::vector<ActStmt>& acts, const FileEntry& f, action& out) {
     for (auto& a : acts) {
+        string s;
         switch (a.kind) {
             case ActKind::Tag:
-                out.decision |= 4;
-                out.tagValue = a.expr ? a.expr->eval(f) : "";
+                s = a.expr->eval(f);
+                out.paths /= s;
                 break;
             case ActKind::Rename:
-                out.decision |= 2;
-                out.renameValue = a.expr ? a.expr->eval(f) : "";
+                s = a.expr->eval(f);
+                out.renameValue = s;
                 break;
             case ActKind::Delete:
-                out.decision |= 1;
                 out.deleteFlag = true;
                 break;
         }
@@ -577,16 +589,14 @@ static void applyActs(const std::vector<ActStmt>& acts, const FileEntry& f, acti
 // ======================= Units =======================
 struct Unit {
     virtual ~Unit() = default;
-    virtual action evalOneFile(const FileEntry& f) const = 0;
+    virtual void evalOneFile(const FileEntry& f, action &ac) const = 0;
 };
 
 struct TagOnlyUnit : Unit {
     std::vector<ActStmt> acts;
     explicit TagOnlyUnit(std::vector<ActStmt> a) : acts(std::move(a)) {}
-    action evalOneFile(const FileEntry& f) const override {
-        action out;
-        applyActs(acts, f, out);
-        return out;
+    void evalOneFile(const FileEntry& f, action &ac) const override {
+        applyActs(acts, f, ac);
     }
 };
 
@@ -597,15 +607,13 @@ struct IfUnit : Unit {
     };
     std::vector<Branch> branches;
 
-    action evalOneFile(const FileEntry& f) const override {
-        action out;
+    void evalOneFile(const FileEntry& f, action &ac) const override {
         for (auto& br : branches) {
             if (!br.cond || br.cond->eval(f)) {
-                applyActs(br.acts, f, out);
+                applyActs(br.acts, f, ac);
                 break;
             }
         }
-        return out;
     }
 };
 
@@ -618,16 +626,14 @@ struct WhenUnit : Unit {
     };
     std::vector<WBranch> branches;
 
-    action evalOneFile(const FileEntry& f) const override {
-        action out;
+    void evalOneFile(const FileEntry& f, action &ac) const override {
         for (auto& br : branches) {
             Compare cmp(attr, br.op, br.values);
             if (cmp.eval(f)) {
-                applyActs(br.acts, f, out);
+                applyActs(br.acts, f, ac);
                 break;
             }
         }
-        return out;
     }
 };
 
@@ -984,6 +990,9 @@ private:
     std::unique_ptr<StrExpr> parseStrAtom() {
         if (cur_.kind == TokKind::String) {
             std::string v = cur_.text;
+            if(!is_string_valid(v)) {
+                errorHere("String contains invalid characters: " + v);
+            }
             advance();
             return std::make_unique<StrLiteral>(std::move(v));
         }
@@ -1015,14 +1024,15 @@ struct SyntaxParser::Impl {
         loadFromString(ss.str());
     }
 
-    std::vector<std::vector<action>> run(const std::vector<FileEntry>& files) const {
-        std::vector<std::vector<action>> out;
-        out.reserve(units.size());
-        for (auto& u : units) {
-            std::vector<action> one;
-            one.reserve(files.size());
-            for (auto& f : files) one.push_back(u->evalOneFile(f));
-            out.push_back(std::move(one));
+    std::vector<action> run(const std::vector<FileEntry>& files) const {
+        std::vector<action> out;
+        out.reserve(files.size());
+        for(auto& f : files) {
+            action ac;
+            for(auto& u : units) {
+                u->evalOneFile(f, ac);
+            }
+            out.push_back(std::move(ac));
         }
         return out;
     }
@@ -1038,7 +1048,7 @@ SyntaxParser& SyntaxParser::operator=(SyntaxParser&&) noexcept = default;
 void SyntaxParser::loadFromFile(const std::string& path) { impl_->loadFromFile(path); }
 void SyntaxParser::loadFromString(const std::string& code) { impl_->loadFromString(code); }
 
-std::vector<std::vector<action>> SyntaxParser::run(const std::vector<FileEntry>& files) const {
+std::vector<action> SyntaxParser::run(const std::vector<FileEntry>& files) const {
     return impl_->run(files);
 }
 
