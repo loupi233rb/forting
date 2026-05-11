@@ -13,6 +13,7 @@ namespace Forting
     private:
         bool FileListWriteToTxt();
         vector<FileEntry> FileList;
+        vector<fs::path> srcPaths;
 
     public:
         File();

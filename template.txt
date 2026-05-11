@@ -1,8 +1,5 @@
-if size > 100kb : tag("big"),rename(name+date.day);
-else :tag("other");
+if size>4kb:tag("big");
+else:tag("small");
 end
-when suffix:
-!=txt:delete;
-end
-tag("size");
-rename(date);
+tag(suffix);
+rename(name+"-"+size+suffix);
