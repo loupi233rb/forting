@@ -1,5 +1,1 @@
-if size>4kb:tag("big");
-else:tag("small");
-end
 tag(suffix);
-rename(name+"-"+size+suffix);

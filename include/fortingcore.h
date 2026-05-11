@@ -23,9 +23,14 @@ namespace Forting
         void init();
         int fileListLen() { return FileList.size(); }
         void Walk(bool recursive = false);
-        void run(const std::vector<action>& acts, bool force=false);
+        void run(const std::vector<action>& acts, bool is_force=false, bool is_move=false);
         const auto getFileList() const { return FileList; }
     };
+
+    void remove_file(const fs::path& p);
+    void copy_file(const fs::path& from, const fs::path& to);
+    void move_file(const fs::path& from, const fs::path& to);
+    void create_dirs(const fs::path& p);
 
 }
 
