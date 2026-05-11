@@ -462,7 +462,7 @@ struct Compare : BoolExpr {
 
     static std::string fileAttrAsString(const FileEntry& f, const AttrRef& ar) {
         if (ar.base == AttrBase::Name) return f.name;
-        if (ar.base == AttrBase::Suffix) return f.suffix;
+        if (ar.base == AttrBase::Suffix) return string(f.suffix).erase(0,1);
         return {};
     }
 
