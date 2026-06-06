@@ -107,7 +107,9 @@ File::File() {
 
 void File::init() {
     this->FileList.clear();
-    this->current_path = fs::current_path();
+    if(this->current_path.empty()) {
+        this->current_path = fs::current_path();
+    }
     #ifdef DEBUG
     this->Walk(true);
     this->FileListWriteToTxt();
