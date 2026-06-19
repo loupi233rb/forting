@@ -32,6 +32,11 @@ Options:
   -d, --delete_path <path> Specify directory to move deleted files to (default: current directory/deleted or path/deleted if specified)
   -m, --move               Move files instead of copying (default: copy))";
 
+const static std::string DEFAULT_CODE = 
+R"(
+
+)";
+
 int check_args(const std::string path, bool need_dir) {
     if(!fs::exists(path)) {
         if(need_dir) {
@@ -143,6 +148,8 @@ int main(int argc, char *argv[])
     root_path.lexically_normal();
     target_path.lexically_normal();
     delete_path.lexically_normal();
+
+
 
     file.init();
     parser.loadFromFile(code_path.string());
