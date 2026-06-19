@@ -33,8 +33,15 @@ Options:
   -m, --move               Move files instead of copying (default: copy))";
 
 const static std::string DEFAULT_CODE = 
-R"(
-
+R"(tag("forting");
+if suffix=jpg|jepg|png|bmp|gif|webp|svg|ico|tiff|tif|raw|heic|heif|avif:tag("images");
+elif suffix=mp4|mkv|avi|mov|wmv|flv|mp3|wav|flac|aac|ogg|opus:tag("videos");
+elif suffix=doc|docx|xls|xlsx|ppt|pptx|pdf:tag("documents");
+elif suffix=exe|msi:tag("executables");
+elif suffix=zip|rar|7z|tar|gz:tag("archives");
+elif suffix=txt|md|log|csv|json|xml|yaml|yml:tag("texts");
+else:tag("others");
+end
 )";
 
 int check_args(const std::string path, bool need_dir) {
@@ -71,7 +78,7 @@ int main(int argc, char *argv[])
     fs::path root_path = "";
     fs::path target_path = "";
     fs::path delete_path = "";
-    fs::path code_path = "./sort.txt";
+    fs::path code_path = "";
 
     int opt;
     int option_index = 0;
@@ -142,18 +149,20 @@ int main(int argc, char *argv[])
     File file;
     SyntaxParser parser;
 
-    if(root_path.empty()) file.current_path = fs::current_path();
-    if(target_path.empty()) target_path = root_path.empty() ? fs::current_path() : root_path;
-    if(delete_path.empty()) delete_path = root_path.empty() ? (fs::current_path() / "deleted") : (root_path / "deleted");
+    if(root_path.empty()) root_path = fs::current_path();
+    if(target_path.empty()) target_path = root_path;
+    if(delete_path.empty()) delete_path = root_path / "deleted";
     root_path.lexically_normal();
     target_path.lexically_normal();
     delete_path.lexically_normal();
 
-
+    file.current_path = root_path;
+    file.target_path = target_path;
+    file.delete_path = delete_path;
 
     file.init();
-    parser.loadFromFile(code_path.string());
-    
+    if(code_path.empty()) parser.loadFromString(DEFAULT_CODE);
+    else parser.loadFromFile(code_path.string());
 
     file.Walk(is_recursive);
     file.run(parser.run(file.getFileList()), is_force, is_move);

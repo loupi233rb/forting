@@ -296,12 +296,25 @@ private:
             }
             break;
         }
+
+        bool mixedAlnum = false;
+        if (pos_ < s_.size() && (std::isalpha((unsigned char)s_[pos_]) || s_[pos_] == '_')) {
+            mixedAlnum = true;
+            while (pos_ < s_.size()) {
+                char c = s_[pos_];
+                if (std::isalnum((unsigned char)c) || c == '_')
+                    advance();
+                else
+                    break;
+            }
+        }
+
         std::string text = s_.substr(start, pos_ - start);
 
         Token t;
-        t.kind = TokKind::Number;
+        t.kind = mixedAlnum ? TokKind::Ident : TokKind::Number;
         t.text = text;
-        t.number = std::stod(text);
+        if (!mixedAlnum) t.number = std::stod(text);
         t.line = l;
         t.col = c0;
         return t;
@@ -331,6 +344,18 @@ static std::int64_t parseSizeToBytes(double value, const std::string& unitRaw, i
     long double bytes = (long double)value * mul;
     if (bytes < 0) bytes = 0;
     return (std::int64_t)llround((double)bytes);
+}
+
+static bool parseSizeLiteralText(const std::string& text, double& value, std::string& unit) {
+    std::size_t end = 0;
+    try {
+        value = std::stod(text, &end);
+    } catch (...) {
+        return false;
+    }
+    if (end == 0) return false;
+    unit = text.substr(end);
+    return true;
 }
 
 static std::string formatSizeHuman(std::int64_t bytes) {
@@ -933,6 +958,26 @@ private:
             return v;
         }
 
+        if (attr.base == AttrBase::Suffix && (cur_.kind == TokKind::Number || cur_.kind == TokKind::Ident)) {
+            v.kind = Value::Kind::Str;
+            v.s = cur_.text;
+            advance();
+            return v;
+        }
+
+        if (attr.base == AttrBase::Size && cur_.kind == TokKind::Ident) {
+            double num = 0.0;
+            std::string unit;
+            if (!parseSizeLiteralText(cur_.text, num, unit)) {
+                errorHere("Expected size literal");
+            }
+            int l = cur_.line, c = cur_.col;
+            advance();
+            v.kind = Value::Kind::SizeBytes;
+            v.bytes = parseSizeToBytes(num, unit.empty() ? "b" : unit, l, c);
+            return v;
+        }
+
         if (cur_.kind == TokKind::Number) {
             // Capture current token position for better error messages
             int l = cur_.line, c = cur_.col;
@@ -944,38 +989,46 @@ private:
             // Examples:
             //   size > 100kb
             //   size > 100 kb
-        if (attr.base == AttrBase::Size) {
-            std::string unit = "b"; // default
-            if (cur_.kind == TokKind::Ident) {
-                std::string u = toLower(cur_.text);
-                if (u == "b" || u == "kb" || u == "mb" || u == "gb") {
-                    unit = cur_.text; // keep raw (parseSizeToBytes lowercases internally)
-                    advance();
+            if (attr.base == AttrBase::Size) {
+                std::string unit = "b"; // default
+                if (cur_.kind == TokKind::Ident) {
+                    double parsedValue = 0.0;
+                    std::string parsedUnit;
+                    if (parseSizeLiteralText(cur_.text, parsedValue, parsedUnit)) {
+                        num = parsedValue;
+                        unit = parsedUnit.empty() ? "b" : parsedUnit;
+                        advance();
+                    } else {
+                        std::string u = toLower(cur_.text);
+                        if (u == "b" || u == "kb" || u == "mb" || u == "gb") {
+                            unit = cur_.text; // keep raw (parseSizeToBytes lowercases internally)
+                            advance();
+                        }
+                    }
                 }
+
+                v.kind = Value::Kind::SizeBytes;
+                v.bytes = parseSizeToBytes(num, unit, l, c);
+                return v;
             }
 
-            v.kind = Value::Kind::SizeBytes;
-            v.bytes = parseSizeToBytes(num, unit, l, c);
+            // Non-size attributes: keep as number
+            v.kind = Value::Kind::Number;
+            v.num = num;
             return v;
         }
 
-        // Non-size attributes: keep as number
-        v.kind = Value::Kind::Number;
-        v.num = num;
+        if (cur_.kind == TokKind::Ident && allowBareIdent) {
+            // suffix=pdf ; treat bare ident as string
+            v.kind = Value::Kind::IdentBare;
+            v.s = cur_.text;
+            advance();
+            return v;
+        }
+
+        errorHere("Expected value literal");
         return v;
     }
-
-    if (cur_.kind == TokKind::Ident && allowBareIdent) {
-        // suffix=pdf ; treat bare ident as string
-        v.kind = Value::Kind::IdentBare;
-        v.s = cur_.text;
-        advance();
-        return v;
-    }
-
-    errorHere("Expected value literal");
-    return v;
-}
 
     // -------- string expr --------
     std::unique_ptr<StrExpr> parseStrExpr() {
