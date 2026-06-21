@@ -398,6 +398,8 @@ struct AttrRef {
 
 enum class CmpOp { Eq, Ne, Gt, Lt, Ge, Le };
 
+enum class FilterMode { None, White, Black };
+
 struct Value {
     enum class Kind { Str, Number, SizeBytes, DateYMD, TimeHMS, IdentBare } kind{};
     std::string s;
@@ -585,7 +587,7 @@ struct Compare : BoolExpr {
 };
 
 // ======================= Actions =======================
-enum class ActKind { Tag, Rename, Delete };
+enum class ActKind { Tag, Rename, Delete, Nothing };
 
 struct ActStmt {
     ActKind kind;
@@ -606,6 +608,8 @@ static void applyActs(const std::vector<ActStmt>& acts, const FileEntry& f, acti
                 break;
             case ActKind::Delete:
                 out.deleteFlag = true;
+                break;
+            case ActKind::Nothing:
                 break;
         }
     }
@@ -670,6 +674,10 @@ public:
     std::vector<std::unique_ptr<Unit>> parseProgram() {
         std::vector<std::unique_ptr<Unit>> units;
         consumeNewlines();
+
+        // Parse optional white/black filter directive at the top
+        parseFilterDirective();
+
         while (cur_.kind != TokKind::End) {
             units.push_back(parseUnit());
             consumeNewlines();
@@ -677,9 +685,14 @@ public:
         return units;
     }
 
+    FilterMode filterMode() const { return filterMode_; }
+    const std::vector<std::string>& filterFolders() const { return filterFolders_; }
+
 private:
     Lexer lex_;
     Token cur_;
+    FilterMode filterMode_ = FilterMode::None;
+    std::vector<std::string> filterFolders_;
 
     [[noreturn]] void errorHere(const std::string& msg) { throw ParseError(cur_.line, cur_.col, msg); }
 
@@ -700,6 +713,25 @@ private:
 
     void consumeNewlines() {
         while (cur_.kind == TokKind::Newline) advance();
+    }
+
+    // -------- top-level filter directive --------
+    void parseFilterDirective() {
+        if (cur_.kind == TokKind::Ident && (cur_.text == "white" || cur_.text == "black")) {
+            filterMode_ = (cur_.text == "white") ? FilterMode::White : FilterMode::Black;
+            advance();
+            expect(TokKind::LParen, "'(' after " + (filterMode_ == FilterMode::White ? std::string("white") : std::string("black")));
+            // Parse comma-separated string list
+            do {
+                if (cur_.kind != TokKind::String)
+                    errorHere("Expected string literal in white/black list");
+                filterFolders_.push_back(cur_.text);
+                advance();
+            } while (accept(TokKind::Comma));
+            expect(TokKind::RParen, "')' after white/black list");
+            expect(TokKind::Semi, "';' after white/black directive");
+            consumeNewlines();
+        }
     }
 
     // -------- unit --------
@@ -826,10 +858,13 @@ private:
             if (kw == "delete") {
                 return ActStmt{ActKind::Delete, nullptr};
             }
+            if (kw == "nothing") {
+                return ActStmt{ActKind::Nothing, nullptr};
+            }
 
             throw ParseError(l, c, "Unknown action keyword: " + kw);
         }
-        errorHere("Expected action: tag(...), rename(...), or delete");
+        errorHere("Expected action: tag(...), rename(...), delete, or nothing");
         return {};
     }
 
@@ -1063,10 +1098,14 @@ private:
 // ======================= SyntaxParser::Impl =======================
 struct SyntaxParser::Impl {
     std::vector<std::unique_ptr<Unit>> units;
+    FilterMode filterMode = FilterMode::None;
+    std::vector<std::string> filterFolders;
 
     void loadFromString(const std::string& code) {
         Parser p(code);
         units = p.parseProgram();
+        filterMode = p.filterMode();
+        filterFolders = p.filterFolders();
     }
 
     void loadFromFile(const std::string& path) {
@@ -1085,6 +1124,23 @@ struct SyntaxParser::Impl {
             for(auto& u : units) {
                 u->evalOneFile(f, ac);
             }
+
+            // Apply white/black filter on the tag path
+            if (filterMode != FilterMode::None && !ac.paths.empty()) {
+                std::string tagPath = ac.paths.string();
+                bool matches = false;
+                for (auto& folder : filterFolders) {
+                    if (tagPath == folder || tagPath.find(folder + "/") == 0) {
+                        matches = true;
+                        break;
+                    }
+                }
+                bool keep = (filterMode == FilterMode::White) ? matches : !matches;
+                if (!keep) {
+                    ac = action{}; // Reset — no tag, rename, or delete
+                }
+            }
+
             out.push_back(std::move(ac));
         }
         return out;
