@@ -1116,10 +1116,12 @@ struct SyntaxParser::Impl {
         loadFromString(ss.str());
     }
 
-    std::vector<action> run(const std::vector<FileEntry>& files) const {
+    std::vector<action> run(const std::vector<FileEntry>& files,const vector<fs::path>& srcPaths) const {
         std::vector<action> out;
         out.reserve(files.size());
-        for(auto& f : files) {
+        for(int i = 0; i < files.size(); ++i) {
+            const auto& f = files[i];
+            const auto& srcPath = srcPaths[i];
             action ac;
             for(auto& u : units) {
                 u->evalOneFile(f, ac);
@@ -1130,7 +1132,7 @@ struct SyntaxParser::Impl {
                 std::string tagPath = ac.paths.string();
                 bool matches = false;
                 for (auto& folder : filterFolders) {
-                    if (tagPath == folder || tagPath.find(folder + "/") == 0) {
+                    if (srcPath == folder || srcPath.string().find(folder)) {
                         matches = true;
                         break;
                     }
@@ -1157,8 +1159,8 @@ SyntaxParser& SyntaxParser::operator=(SyntaxParser&&) noexcept = default;
 void SyntaxParser::loadFromFile(const std::string& path) { impl_->loadFromFile(path); }
 void SyntaxParser::loadFromString(const std::string& code) { impl_->loadFromString(code); }
 
-std::vector<action> SyntaxParser::run(const std::vector<FileEntry>& files) const {
-    return impl_->run(files);
+std::vector<action> SyntaxParser::run(const std::vector<FileEntry>& files, const vector<fs::path>& srcPaths) const {
+    return impl_->run(files, srcPaths);
 }
 
 std::size_t SyntaxParser::unitCount() const { return impl_->units.size(); }

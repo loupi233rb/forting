@@ -31,7 +31,7 @@ public:
     void loadFromString(const std::string& code);
 
     // Outer vector size = unit count; inner vector size = files.size()
-    std::vector<action> run(const std::vector<FileEntry>& files) const;
+    std::vector<action> run(const std::vector<FileEntry>& files,const vector<fs::path>& srcPaths) const;
 
     std::size_t unitCount() const;
 

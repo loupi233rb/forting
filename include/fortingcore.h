@@ -25,6 +25,7 @@ namespace Forting
         void Walk(bool recursive = false);
         void run(const std::vector<action>& acts, bool is_force=false, bool is_move=false);
         const auto getFileList() const { return FileList; }
+        const auto getSrcPaths() const { return srcPaths; }
     };
 
     void remove_file(const fs::path& p);
