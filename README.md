@@ -3,6 +3,7 @@
 ### forting code介绍
 示例如下：
 ```
+white("folderName","whitelistFolder")
 if conditions :             ------------
 action1,action2,...,;                  |
 elif conditions:                       |
@@ -24,11 +25,21 @@ action;
 其中condition可以是使用 || && () !连接的任意布尔表达式
 空格和空行不严格，但; end不可省略
 
+代码开头可以指定黑白名单模式，但只能指定一种或者不指定，内部可有多个文件夹名字，只要文件相对于工作目录的路径中包含任一名字均会满足条件，包括文件名含有
+```
+root: d:\temp\
+file: d:\temp\old\st.txt
+relative: old\st.txt
+black("st") -> exclude
+white("old") -> include
+```
+
 action为
 ```
 tag("tagValue")
 rename("renameValue")
 delete
+nothing
 ```
 
 attribution，也即属性有
@@ -49,6 +60,17 @@ rename(name+"-"size+"suffix")       // test.txt 16.3kb ->
 
 ### 使用
 使用cmake进行构建
+```
+git clone https://github.com/loupi233rb/forting
+cd forting
+mkdir build && cd build
+cmake ..
+make
+```
+> 如需测试功能，可使用Debug模式编译，此时为只读的预览模式，预览操作不会创建任何文件夹以及对文件进行任何操作
+> `cmake .. -DCMAKE_BUILD_TYPE=Debug`
+
+
 `forting -h(--help)`查看使用说明
 
 
