@@ -1,6 +1,7 @@
 #include "SyntaxParser.h"
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -1116,12 +1117,15 @@ struct SyntaxParser::Impl {
         loadFromString(ss.str());
     }
 
-    std::vector<action> run(const std::vector<FileEntry>& files,const vector<fs::path>& srcPaths) const {
+    std::vector<action> run(const File& file) const {
+        const auto& files = file.getFileList();
+        const auto& srcPaths = file.getSrcPaths();
+        const auto& basePath = file.current_path;
         std::vector<action> out;
         out.reserve(files.size());
         for(int i = 0; i < files.size(); ++i) {
             const auto& f = files[i];
-            const auto& srcPath = srcPaths[i];
+            const auto& srcPath = fs::relative(srcPaths[i], basePath);
             action ac;
             for(auto& u : units) {
                 u->evalOneFile(f, ac);
@@ -1160,8 +1164,8 @@ SyntaxParser& SyntaxParser::operator=(SyntaxParser&&) noexcept = default;
 void SyntaxParser::loadFromFile(const std::string& path) { impl_->loadFromFile(path); }
 void SyntaxParser::loadFromString(const std::string& code) { impl_->loadFromString(code); }
 
-std::vector<action> SyntaxParser::run(const std::vector<FileEntry>& files, const vector<fs::path>& srcPaths) const {
-    return impl_->run(files, srcPaths);
+std::vector<action> SyntaxParser::run(const File& file) const {
+    return impl_->run(file);
 }
 
 std::size_t SyntaxParser::unitCount() const { return impl_->units.size(); }

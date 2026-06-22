@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     else parser.loadFromFile(code_path.string());
 
     file.Walk(is_recursive);
-    file.run(parser.run(file.getFileList(), file.getSrcPaths()), is_force, is_move);
+    file.run(parser.run(file), is_force, is_move);
 
     return 0;
 }

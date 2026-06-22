@@ -1,6 +1,7 @@
 #pragma once
 
 #include "type.h"
+#include <fortingcore.h>
 
 #include <ctime>
 #include <memory>
@@ -31,7 +32,7 @@ public:
     void loadFromString(const std::string& code);
 
     // Outer vector size = unit count; inner vector size = files.size()
-    std::vector<action> run(const std::vector<FileEntry>& files,const vector<fs::path>& srcPaths) const;
+    std::vector<action> run(const File& file) const;
 
     std::size_t unitCount() const;
 
