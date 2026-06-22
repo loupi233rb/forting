@@ -1,5 +1,3 @@
-#include "type.h"
-
 #include "fortingcore.h"
 #include "SyntaxParser.h"
 #include <clocale>

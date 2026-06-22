@@ -1,7 +1,5 @@
-a 9 .\temp\a.txt
-b 0 .\temp\b.png
-aa 9 .\temp\black\aa.txt
-bb 0 .\temp\black\bb.png
-cc 9 .\temp\black\cc.md
-c 0 .\temp\c.md
-dddd 6 .\temp\dddd.txt
+a 0 .\temp\a.txt
+d 0 .\temp\black\d.mp3
+m 2 .\temp\m.md
+c 0 .\temp\white\c.png
+txt 6 .\temp\white\txt.md

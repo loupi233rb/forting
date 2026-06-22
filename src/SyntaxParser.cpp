@@ -489,7 +489,7 @@ struct Compare : BoolExpr {
 
     static std::string fileAttrAsString(const FileEntry& f, const AttrRef& ar) {
         if (ar.base == AttrBase::Name) return f.name;
-        if (ar.base == AttrBase::Suffix) return string(f.suffix).erase(0,1);
+        if (ar.base == AttrBase::Suffix) return string(f.suffix);
         return {};
     }
 
@@ -1132,7 +1132,8 @@ struct SyntaxParser::Impl {
                 std::string tagPath = ac.paths.string();
                 bool matches = false;
                 for (auto& folder : filterFolders) {
-                    if (srcPath == folder || srcPath.string().find(folder)) {
+                    // dont use -1 as std::string::npos
+                    if (srcPath.string().find(folder)!= std::string::npos) {
                         matches = true;
                         break;
                     }

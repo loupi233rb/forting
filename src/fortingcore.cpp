@@ -67,7 +67,7 @@ void File::Walk(bool recursive) {
         fe.name = entry.path().stem().string();
         fe.size = entry.is_regular_file() ? entry.file_size() : 0;
         fe.lw_time = filetime_to_tm(entry.path());
-        fe.suffix = entry.path().extension().string();
+        fe.suffix = entry.path().extension().string().erase(0, 1); // Remove the leading dot from the suffix
         fileList.push_back(std::move(fe));
         srcPaths.push_back(entry.path());
     };
@@ -126,9 +126,11 @@ void File::run(const std::vector<action>& acts, bool is_force, bool is_move) {
     for(size_t i = 0; i < acts.size(); ++i) {
         const auto& act = acts[i];
         const auto& fe = this->FileList[i];
-        string fileName = acts[i].renameValue.empty() ? srcPaths[i].filename().string():(acts[i].renameValue);
+        bool isTaged = !act.paths.empty();
+        bool isRenamed = !act.renameValue.empty();
+        string fileName = isRenamed ? act.renameValue:srcPaths[i].filename().string();
         fs::path target = this->target_path / act.paths;
-        if(!fs::exists(target)) {
+        if(!fs::exists(target) && isTaged) {
             Forting::create_dirs(target);
         }
         if(act.deleteFlag) {
@@ -138,7 +140,7 @@ void File::run(const std::vector<action>& acts, bool is_force, bool is_move) {
             }
             Forting::move_file(this->srcPaths[i], this->delete_path / fileName);
         }
-        else {
+        else if (isTaged) {
             fs::path dest = target / fileName;
             if(fs::exists(dest)) {
                 if(is_force) {
@@ -155,6 +157,9 @@ void File::run(const std::vector<action>& acts, bool is_force, bool is_move) {
             else {
                 Forting::copy_file(this->srcPaths[i], dest);
             }
+        }
+        else if(isRenamed) {
+            Forting::move_file(this->srcPaths[i], this->current_path / fileName);
         }
     }
 }
