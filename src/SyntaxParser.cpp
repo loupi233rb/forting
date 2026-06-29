@@ -1131,16 +1131,18 @@ struct SyntaxParser::Impl {
                 u->evalOneFile(f, ac);
             }
 
-            // Apply white/black filter on the tag path
+            // Apply white/black filter — match against directory components only
             if (filterMode != FilterMode::None && !ac.paths.empty()) {
-                std::string tagPath = ac.paths.string();
                 bool matches = false;
+                fs::path relDir = srcPath.parent_path(); // directory part only, no filename
                 for (auto& folder : filterFolders) {
-                    // dont use -1 as std::string::npos
-                    if (srcPath.string().find(folder)!= std::string::npos) {
-                        matches = true;
-                        break;
+                    for (auto& component : relDir) {
+                        if (component.string().find(folder) != std::string::npos) {
+                            matches = true;
+                            break;
+                        }
                     }
+                    if (matches) break;
                 }
                 bool keep = (filterMode == FilterMode::White) ? matches : !matches;
                 if (!keep) {
