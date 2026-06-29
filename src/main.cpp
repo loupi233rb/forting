@@ -150,9 +150,9 @@ int main(int argc, char *argv[])
     if(root_path.empty()) root_path = fs::current_path();
     if(target_path.empty()) target_path = root_path;
     if(delete_path.empty()) delete_path = root_path / "deleted";
-    root_path.lexically_normal();
-    target_path.lexically_normal();
-    delete_path.lexically_normal();
+    root_path = root_path.lexically_normal();
+    target_path = target_path.lexically_normal();
+    delete_path = delete_path.lexically_normal();
 
     file.current_path = root_path;
     file.target_path = target_path;

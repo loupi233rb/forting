@@ -1,7 +1,7 @@
 #pragma once
 
 #include "type.h"
-#include <fortingcore.h>
+#include "fortingcore.h"
 
 #include <ctime>
 #include <memory>

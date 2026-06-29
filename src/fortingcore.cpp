@@ -71,7 +71,6 @@ void File::Walk(bool recursive) {
         fileList.push_back(std::move(fe));
         srcPaths.push_back(entry.path());
     };
-    fs::recursive_directory_iterator d_it = fs::recursive_directory_iterator(this->current_path, fs::directory_options::skip_permission_denied);
     if(recursive) {
         for(auto &entry : fs::recursive_directory_iterator(this->current_path, fs::directory_options::skip_permission_denied)) {
             process_entry(entry, this->FileList, this->srcPaths);
