@@ -57,10 +57,6 @@ void create_dirs(const fs::path& p) {
 void File::Walk(bool recursive) {
     this->FileList.clear();
     this->srcPaths.clear();
-    if(!fs::exists(this->current_path) || !fs::is_directory(this->current_path)) {
-        cerr << "Invalid current_path path: " << this->current_path << endl;
-        return;
-    }
     auto process_entry = [](const fs::directory_entry& entry, vector<FileEntry>& fileList, vector<fs::path>& srcPaths) {
         if(entry.is_directory()) return;
         FileEntry fe;
